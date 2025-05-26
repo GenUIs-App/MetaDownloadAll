@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const WebSocket = require('ws');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -36,13 +38,61 @@ setInterval(() => {
     }
 }, HEARTBEAT_INTERVAL);
 
-app.post('/call', (req, res) => {
+app.post('/call', async (req, res) => {
     const { id, apiname, apiparams } = req.body;
 
     console.log(req.headers, req.body);
 
     if (!id || !apiname) {
         return res.status(400).json({ error: 'Missing required parameters' });
+    }
+
+    // Handle URL list API call
+    if (apiname === 'get_url_list') {
+        try {
+            const urls = await fs.promises.readFile(path.join(__dirname, 'data', 'urls.txt'), 'utf8');
+            const urlList = urls.split('\n').filter(url => url.trim() !== '');
+            
+            res.json({
+                success: true,
+                data: urlList
+            });
+            return;
+        } catch (error) {
+            console.error('Error reading URL list:', error);
+            return res.status(500).json({
+                success: false,
+                error: 'Failed to read URL list'
+            });
+        }
+    }
+
+    // Handle Facebook reels API call
+    if (apiname === 'get_list_fb_user_reels') {
+        try {
+            const url = apiparams.url;
+            const cursor = apiparams.cursor || '';
+
+            // TODO: Implement actual Facebook API call
+            // This is a placeholder response
+            const response = {
+                success: true,
+                data: {
+                    items: [],
+                    cursor: cursor,
+                    has_more: false
+                }
+            };
+
+            res.json(response);
+            return;
+        } catch (error) {
+            console.error('Error in get_list_fb_user_reels:', error);
+            return res.status(500).json({
+                success: false,
+                error: 'Failed to fetch Facebook user reels'
+            });
+        }
     }
 
     const ws = clients.get(id);
