@@ -1,0 +1,32 @@
+[
+  {
+    "id": "1",
+    "name": "holylyy",
+    "facebook": "https://www.facebook.com/holylyy",
+    "instagram": "",
+    "threads": "",
+    "tiktok": "",
+    "createdAt": "2025-05-27T00:56:19+07:00",
+    "updatedAt": "2025-05-27T00:56:19+07:00"
+  },
+  {
+    "id": "2",
+    "name": "example1",
+    "facebook": "https://www.facebook.com/example1",
+    "instagram": "",
+    "threads": "",
+    "tiktok": "",
+    "createdAt": "2025-05-27T00:56:19+07:00",
+    "updatedAt": "2025-05-27T00:56:19+07:00"
+  },
+  {
+    "id": "3",
+    "name": "example2",
+    "facebook": "https://www.facebook.com/example2",
+    "instagram": "",
+    "threads": "",
+    "tiktok": "",
+    "createdAt": "2025-05-27T00:56:19+07:00",
+    "updatedAt": "2025-05-27T00:56:19+07:00"
+  }
+]

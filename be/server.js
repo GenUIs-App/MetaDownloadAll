@@ -7,6 +7,8 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 
+const ACCOUNTS_FILE_PATH = path.join(__dirname, 'data', 'accounts.json');
+
 const clients = new Map();
 const pendingRequests = new Map();
 const clientHeartbeats = new Map();
@@ -50,6 +52,7 @@ app.post('/call', async (req, res) => {
     // Handle URL list API call
     if (apiname === 'get_url_list') {
         try {
+            // For backward compatibility
             const urls = await fs.promises.readFile(path.join(__dirname, 'data', 'urls.txt'), 'utf8');
             const urlList = urls.split('\n').filter(url => url.trim() !== '');
             
@@ -63,6 +66,234 @@ app.post('/call', async (req, res) => {
             return res.status(500).json({
                 success: false,
                 error: 'Failed to read URL list'
+            });
+        }
+    }
+    
+    // Get all accounts
+    if (apiname === 'get_accounts') {
+        try {
+            // Check if accounts file exists, if not create it
+            if (!fs.existsSync(ACCOUNTS_FILE_PATH)) {
+                await fs.promises.writeFile(ACCOUNTS_FILE_PATH, '[]', 'utf8');
+            }
+            
+            const accountsData = await fs.promises.readFile(ACCOUNTS_FILE_PATH, 'utf8');
+            const accounts = JSON.parse(accountsData);
+            
+            res.json({
+                success: true,
+                data: accounts
+            });
+            return;
+        } catch (error) {
+            console.error('Error reading accounts:', error);
+            return res.status(500).json({
+                success: false,
+                error: 'Failed to read accounts'
+            });
+        }
+    }
+    
+    // Add a new account
+    if (apiname === 'add_account') {
+        try {
+            const { name, facebook, instagram, threads, tiktok } = apiparams;
+            
+            if (!name) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Account name is required'
+                });
+            }
+            
+            // Need at least one social media URL
+            if (!facebook && !instagram && !threads) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'At least one social media URL is required'
+                });
+            }
+            
+            // Read existing accounts
+            let accounts = [];
+            if (fs.existsSync(ACCOUNTS_FILE_PATH)) {
+                const accountsData = await fs.promises.readFile(ACCOUNTS_FILE_PATH, 'utf8');
+                accounts = JSON.parse(accountsData);
+            }
+            
+            // Generate a new ID
+            const newId = accounts.length > 0 
+                ? (Math.max(...accounts.map(a => parseInt(a.id))) + 1).toString()
+                : "1";
+            
+            // Get current timestamp
+            const currentTime = new Date().toISOString();
+            
+            // Create new account
+            const newAccount = {
+                id: newId,
+                name,
+                facebook,
+                instagram: instagram || '',
+                threads: threads || '',
+                tiktok: tiktok || '',
+                createdAt: currentTime,
+                updatedAt: currentTime
+            };
+            
+            // Add to accounts list
+            accounts.push(newAccount);
+            
+            // Save to file
+            await fs.promises.writeFile(ACCOUNTS_FILE_PATH, JSON.stringify(accounts, null, 2), 'utf8');
+            
+            // Update urls.txt for backward compatibility
+            const urlList = accounts.map(a => a.facebook).filter(url => url.trim() !== '');
+            await fs.promises.writeFile(path.join(__dirname, 'data', 'urls.txt'), urlList.join('\n'), 'utf8');
+            
+            res.json({
+                success: true,
+                data: newAccount
+            });
+            return;
+        } catch (error) {
+            console.error('Error adding account:', error);
+            return res.status(500).json({
+                success: false,
+                error: 'Failed to add account'
+            });
+        }
+    }
+    
+    // Update an existing account
+    if (apiname === 'update_account') {
+        try {
+            const { id, name, facebook, instagram, threads, tiktok } = apiparams;
+            
+            if (!id || !name) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'ID and name are required'
+                });
+            }
+            
+            // Need at least one social media URL
+            if (!facebook && !instagram && !threads) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'At least one social media URL is required'
+                });
+            }
+            
+            // Read existing accounts
+            if (!fs.existsSync(ACCOUNTS_FILE_PATH)) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Accounts file not found'
+                });
+            }
+            
+            const accountsData = await fs.promises.readFile(ACCOUNTS_FILE_PATH, 'utf8');
+            let accounts = JSON.parse(accountsData);
+            
+            // Find account by ID
+            const accountIndex = accounts.findIndex(a => a.id === id);
+            if (accountIndex === -1) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Account not found'
+                });
+            }
+            
+            // Get current timestamp
+            const currentTime = new Date().toISOString();
+            
+            // Update account
+            accounts[accountIndex] = {
+                ...accounts[accountIndex],
+                name,
+                facebook,
+                instagram: instagram || '',
+                threads: threads || '',
+                tiktok: tiktok || '',
+                updatedAt: currentTime
+            };
+            
+            // Save to file
+            await fs.promises.writeFile(ACCOUNTS_FILE_PATH, JSON.stringify(accounts, null, 2), 'utf8');
+            
+            // Update urls.txt for backward compatibility
+            const urlList = accounts.map(a => a.facebook).filter(url => url.trim() !== '');
+            await fs.promises.writeFile(path.join(__dirname, 'data', 'urls.txt'), urlList.join('\n'), 'utf8');
+            
+            res.json({
+                success: true,
+                data: accounts[accountIndex]
+            });
+            return;
+        } catch (error) {
+            console.error('Error updating account:', error);
+            return res.status(500).json({
+                success: false,
+                error: 'Failed to update account'
+            });
+        }
+    }
+    
+    // Delete an account
+    if (apiname === 'delete_account') {
+        try {
+            const { id } = apiparams;
+            
+            if (!id) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Account ID is required'
+                });
+            }
+            
+            // Read existing accounts
+            if (!fs.existsSync(ACCOUNTS_FILE_PATH)) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Accounts file not found'
+                });
+            }
+            
+            const accountsData = await fs.promises.readFile(ACCOUNTS_FILE_PATH, 'utf8');
+            let accounts = JSON.parse(accountsData);
+            
+            // Find account by ID
+            const accountIndex = accounts.findIndex(a => a.id === id);
+            if (accountIndex === -1) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Account not found'
+                });
+            }
+            
+            // Remove account
+            const deletedAccount = accounts[accountIndex];
+            accounts.splice(accountIndex, 1);
+            
+            // Save to file
+            await fs.promises.writeFile(ACCOUNTS_FILE_PATH, JSON.stringify(accounts, null, 2), 'utf8');
+            
+            // Update urls.txt for backward compatibility
+            const urlList = accounts.map(a => a.facebook).filter(url => url.trim() !== '');
+            await fs.promises.writeFile(path.join(__dirname, 'data', 'urls.txt'), urlList.join('\n'), 'utf8');
+            
+            res.json({
+                success: true,
+                data: deletedAccount
+            });
+            return;
+        } catch (error) {
+            console.error('Error deleting account:', error);
+            return res.status(500).json({
+                success: false,
+                error: 'Failed to delete account'
             });
         }
     }
