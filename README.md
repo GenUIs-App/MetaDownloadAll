@@ -8,7 +8,11 @@ A comprehensive application for downloading media content from various sources.
 - [x] Instagram Media Download
 - [x] Twitter Media Download
 - [ ] YouTube Media Download (Coming Soon)
-- [x] Account List Management
+- [x] TikTok Media Download (New!)
+- [x] Advanced Account Management
+  - [x] Multi-platform account support
+  - [x] Auto-extraction of usernames
+  - [x] Collapsible account editing
 
 ## Project Structure
 
@@ -78,7 +82,16 @@ MIT License - see LICENSE file
 
 ## Updates
 
-### [2025-05-27]
+### [2025-05-27] - Enhanced Account Management
+- Added TikTok support for account management
+- Implemented auto-extraction of usernames from URLs
+- Added collapsible account editing interface
+- Created scrollable account list sorted by newest first
+- Added timestamp tracking for account creation and updates
+- Made Facebook links optional (any social media platform can be used)
+- Improved UI with direct links to social media profiles
+
+### [2025-05-27] - Initial Release
 - Initial project setup
 - Basic frontend structure
 - Facebook media download functionality
