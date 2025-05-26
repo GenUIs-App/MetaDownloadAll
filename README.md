@@ -8,6 +8,25 @@ A comprehensive application for downloading media content from various sources.
 - [x] Instagram Media Download
 - [x] Twitter Media Download
 - [ ] YouTube Media Download (Coming Soon)
+- [x] Account List Management
+
+## Project Structure
+
+```
+.
+├── be/         # Backend services
+│   └── data/   # Data files
+│       └── urls.txt  # List of account URLs
+└── fe/         # Frontend application
+    ├── src/    # Source code
+    │   ├── api/    # API utilities
+    │   │   └── urls.ts  # URL list API
+    │   ├── components/  # React components
+    │   │   └── AccountList.tsx  # Account list UI
+    │   └── config.ts   # Environment configuration
+    ├── public/ # Static assets
+    └── ...     # Configuration files
+```
 
 ## Project Structure
 
